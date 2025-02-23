@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 400px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h2 {
+            text-align: center;
+        }
+        input, select, button {
+            width: 100%;
+            margin: 10px 0;
+            padding: 8px;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            background: #ddd;
+            margin: 5px 0;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 5px;
+        }
+        .edit-btn {
+            background: blue;
+            color: white;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-right: 5px;
+        }
+        .delete-btn {
+            background: red;
+            color: white;
+            border: none;
+            padding: 5px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .total-expense {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Expense Tracker</h2>
+    <div class="container">
+        <input type="text" id="expenseName" placeholder="Expense Name">
+        <input type="number" id="expenseAmount" placeholder="Amount">
+        <select id="expenseCategory">
+            <option value="Food">Food</option>
+            <option value="Transport">Transport</option>
+            <option value="Shopping">Shopping</option>
+            <option value="Others">Others</option>
+        </select>
+        <button id="addExpenseBtn">Add Expense</button>
+
+        <ul id="expenseList"></ul>
+        <div class="total-expense">Total: ₹<span id="totalAmount">0</span></div>
+    </div>
+
+    <script>
+        let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
+        let editingIndex = -1;
+
+        function addExpense() {
+            let name = document.getElementById("expenseName").value;
+            let amount = document.getElementById("expenseAmount").value;
+            let category = document.getElementById("expenseCategory").value;
+
+            if (name === "" || amount === "") {
+                alert("Please enter both expense name and amount!");
+                return;
+            }
+
+            if (editingIndex === -1) {
+                expenses.push({ name, amount, category });
+            } else {
+                expenses[editingIndex] = { name, amount, category };
+                editingIndex = -1;
+                document.getElementById("addExpenseBtn").innerText = "Add Expense";
+            }
+
+            localStorage.setItem("expenses", JSON.stringify(expenses));
+            refreshUI();
+            clearFields();
+        }
+
+        function editExpense(index) {
+            let expense = expenses[index];
+
+            document.getElementById("expenseName").value = expense.name;
+            document.getElementById("expenseAmount").value = expense.amount;
+            document.getElementById("expenseCategory").value = expense.category;
+
+            editingIndex = index;
+            document.getElementById("addExpenseBtn").innerText = "Update Expense";
+        }
+
+        function deleteExpense(index) {
+            expenses.splice(index, 1);
+            localStorage.setItem("expenses", JSON.stringify(expenses));
+            refreshUI();
+        }
+
+        function refreshUI() {
+            document.getElementById("expenseList").innerHTML = "";
+            expenses.forEach((expense, index) => {
+                let li = document.createElement("li");
+                li.innerHTML = `${expense.name} - ₹${expense.amount} (${expense.category})`;
+
+                let editBtn = document.createElement("button");
+                editBtn.innerText = "✏️";
+                editBtn.classList.add("edit-btn");
+                editBtn.onclick = () => editExpense(index);
+
+                let deleteBtn = document.createElement("button");
+                deleteBtn.innerText = "X";
+                deleteBtn.classList.add("delete-btn");
+                deleteBtn.onclick = () => deleteExpense(index);
+
+                li.appendChild(editBtn);
+                li.appendChild(deleteBtn);
+                document.getElementById("expenseList").appendChild(li);
+            });
+
+            updateTotal();
+        }
+
+        function updateTotal() {
+            let total = expenses.reduce((sum, expense) => sum + parseFloat(expense.amount), 0);
+            document.getElementById("totalAmount").innerText = total;
+        }
+
+        function clearFields() {
+            document.getElementById("expenseName").value = "";
+            document.getElementById("expenseAmount").value = "";
+            document.getElementById("expenseCategory").value = "Food";
+        }
+
+        window.onload = function () {
+            refreshUI();
+            document.getElementById("addExpenseBtn").addEventListener("click", addExpense);
+        };
+    </script>
+
+</body>
+</html>
+
